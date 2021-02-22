@@ -4,8 +4,8 @@
     <el-button @click="handleAdd">代码编辑，高亮补全</el-button>
     <el-button @click="handleUpdateBBB">代码版本，差异对比</el-button>
     <div id="view"></div>
-    <el-form ref="form" :model="form" label-width="80px">
-      <el-form-item label="脚本内容">
+    <el-form ref="form" :model="form" label-width="0px">
+      <el-form-item label="">
         <div class="in-coder-panel">
           <textarea ref="textarea"></textarea>
           <el-select
@@ -77,6 +77,7 @@
 
   export default {
     name: 'Code',
+    // code: '',
 
     props: {
       // 外部传入的内容，用于实现双向绑定
@@ -95,18 +96,8 @@
     data() {
       return {
         // 内部真实的内容
-        code:
-          '#!/bin/bash\n' +
-          'cd /root/\n' +
-          'list=(`ls`)\n' +
-          ' \n' +
-          'for i in ${list[@]}\n' +
-          'do\n' +
-          '   if [ -d $i ]\n' +
-          '   then\n' +
-          '       cp -r $i /tmp/\n' +
-          '   fi\n' +
-          'done',
+        code: this.code,
+
         // 默认的语法类型
         mode: 'shell',
         // 编辑器实例
@@ -157,6 +148,9 @@
         open: false,
         openBBB: false,
       }
+    },
+    created() {
+      this.fetchData()
     },
     methods: {
       // 初始化
@@ -235,7 +229,7 @@
       handleAdd() {
         // this.open = true
         // this.title = '代码编辑，高亮补全'
-
+        this.fetchData()
         this.$nextTick(function () {
           this._initialize()
         })
@@ -277,6 +271,37 @@
               'done'
           )
         })
+      },
+
+      fetchData() {
+        this._readTestFile()
+        this.$nextTick(function () {
+          this._initialize()
+        })
+      },
+
+      _readTestFile() {
+        const filename =
+          '/jumper_master/code_for_mount/jumper/test/test_seg_solo.py'
+        const file = this._loadFile(filename)
+        this.code = this._unicodeToUtf8(file)
+      },
+      // 读取文件
+      _loadFile(name) {
+        const xhr = new XMLHttpRequest()
+        const okStatus = document.location.protocol === 'file:' ? 0 : 200
+        xhr.open('GET', name, false)
+        xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+        xhr.overrideMimeType('text/plain;charset=utf-8') // 默认为utf-8
+        xhr.send(null)
+        return xhr.status === okStatus ? xhr.responseText : null
+      },
+      // unicode转utf-8
+      _unicodeToUtf8(data) {
+        if (data != null) {
+          data = data.replace(/\\/g, '%')
+        }
+        return unescape(data)
       },
     },
   }

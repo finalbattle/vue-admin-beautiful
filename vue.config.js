@@ -54,6 +54,13 @@ module.exports = {
       errors: true,
     },
     after: mockServer(),
+    proxy: {
+      '/jumper_master': {
+        target: 'http://10.43.75.44:8080/',
+        changeOrigin: true, // target是域名的话，需要这个参数，
+        secure: false, // 设置支持https协议的代理
+      },
+    },
   },
   configureWebpack() {
     return {
