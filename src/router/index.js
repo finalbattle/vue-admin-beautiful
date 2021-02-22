@@ -162,6 +162,12 @@ export const asyncRoutes = [
         meta: { title: '树', permissions: ['admin'] },
       },
       {
+        path: 'card',
+        name: 'Card',
+        component: () => import('@/views/vab/card/index'),
+        meta: { title: '卡片', permissions: ['admin'] },
+      },
+      {
         path: 'verify',
         name: 'Verify',
         component: () => import('@/views/vab/verify/index'),
@@ -231,6 +237,16 @@ export const asyncRoutes = [
         },
       },
       {
+        path: 'codeEditor',
+        name: 'CodeEditor',
+        component: () => import('@/views/vab/codeEditor/index2'),
+        meta: {
+          title: '代码编辑器',
+          permissions: ['admin'],
+          badge: 'New',
+        },
+      },
+      {
         path: 'backToTop',
         name: 'BackToTop',
         component: () => import('@/views/vab/backToTop/index'),
@@ -241,6 +257,12 @@ export const asyncRoutes = [
         name: 'Lodash',
         component: () => import('@/views/vab/lodash/index'),
         meta: { title: 'lodash', permissions: ['admin'] },
+      },
+      {
+        path: 'imgComparison',
+        name: 'ImgComparison',
+        component: () => import('@/views/vab/imgComparison/index'),
+        meta: { title: '图像拖拽比对', permissions: ['admin'] },
       },
       {
         path: 'smallComponents',
