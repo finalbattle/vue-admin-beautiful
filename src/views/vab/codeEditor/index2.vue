@@ -69,6 +69,11 @@
   import 'codemirror/addon/merge/merge.js'
   import 'codemirror/addon/merge/merge.css'
   import DiffMatchPatch from 'diff-match-patch'
+  // import x2js from 'x2js'
+  import * as X2JS from 'x2js';
+
+  // Vue.prototype.$x2js = new x2js()
+  const x2js = new X2JS();
 
   window.diff_match_patch = DiffMatchPatch
   window.DIFF_DELETE = -1
@@ -108,6 +113,7 @@
           tabSize: 4,
           // 主题，对应主题库 JS 需要提前引入
           theme: 'eclipse',
+          autocapitalize: false,
           // 显示行号
           lineNumbers: true,
           line: true,
@@ -167,6 +173,10 @@
           if (this.$emit) {
             this.$emit('input', this.code)
           }
+        })
+
+        this.code.on('renderLine', (code) => {
+          debugger
         })
 
         // 尝试从父容器获取语法类型
@@ -274,17 +284,25 @@
       },
 
       fetchData() {
-        this._readTestFile()
+        const filepath =
+          'jumper/common/data_io/utils.py'
+        const filename =
+          '/jumper_master/code_for_mount/' + filepath
+        this.code = this._readTestFile(filename)
+        const xmlname =
+          '/jumper_master/code_for_mount/jumper/coverage.xml'
+        this.uncover_lines = this._getXmlConfig(xmlname, filepath)
         this.$nextTick(function () {
           this._initialize()
+          // var element = this.$refs.form
+          this.setUnCoverStyle()
         })
       },
 
-      _readTestFile() {
-        const filename =
-          '/jumper_master/code_for_mount/jumper/test/test_seg_solo.py'
+      _readTestFile(filename) {
         const file = this._loadFile(filename)
-        this.code = this._unicodeToUtf8(file)
+        // this.code = this._unicodeToUtf8(file)
+        return this._unicodeToUtf8(file)
       },
       // 读取文件
       _loadFile(name) {
@@ -302,6 +320,30 @@
           data = data.replace(/\\/g, '%')
         }
         return unescape(data)
+      },
+
+      _getXmlConfig(filename, filepath) {
+        var xml_data = this._readTestFile(filename);
+        var jsonObj = x2js.xml2js(xml_data);
+        var JSONPath = require('JSONPath')
+        var lines = JSONPath.eval(jsonObj, '$..class[?(@._filename=="'+ filepath +'")]..line[?(@._hits=="0")]')
+        return lines
+      },
+
+      setUnCoverStyle() {
+        var codemirror_lines = document.getElementsByClassName("CodeMirror-line")
+        for(var i=0; i<this.uncover_lines.length; i++){
+          var number = this.uncover_lines[i]._number
+          console.log(number)
+          // codemirror_lines[number+1].setAttribute("")
+          // var element = this.$refs.textarea
+          // if (i == 0) {
+          //   debugger
+          // }
+          if (codemirror_lines[parseInt(number)+1]) {
+            codemirror_lines[parseInt(number)+1].setAttribute("class", "CodeMirror-line-red")
+          }
+        }
       },
     },
   }
@@ -338,7 +380,8 @@
   .CodeMirror pre.CodeMirror-line-like {
     padding: 0 45px;
   }
-  .red {
+  .CodeMirror-line-red {
+    padding: 0 45px;
     background-color: red !important;
   }
 </style>
