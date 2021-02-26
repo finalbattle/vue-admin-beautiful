@@ -113,11 +113,14 @@
           tabSize: 4,
           // 主题，对应主题库 JS 需要提前引入
           theme: 'eclipse',
-          autocapitalize: false,
+          maxHighlightLength: "Infinity",
           // 显示行号
           lineNumbers: true,
           line: true,
           extraKeys: { Ctrl: 'autocomplete' },
+
+          setActiveLine: true,
+          lineWrapping: true,
         },
         // 支持切换的语法高亮类型，对应 JS 已经提前引入
         // 使用的是 MIME-TYPE ，不过作为前缀的 text/ 在后面指定时写死了
@@ -163,20 +166,33 @@
       _initialize() {
         // 初始化编辑器实例，传入需要被实例化的文本域对象和默认配置
         this.coder = CodeMirror.fromTextArea(this.$refs.textarea, this.options)
+        self = this
+        // CodeMirror.defineInitHook(function(cm){
+        //   console.log("============CodeMirror.defineInitHook========")
+        //   console.log(cm)
+        //   console.log("====================================")
+        //   debugger
+        //   // self.setUnCoverStyle()
+        //   // this.coder.addLineClass(8, "CodeMirror-line-red")
+        // });
         // 编辑器赋值
         this.coder.setValue(this.value || this.code)
 
         // 支持双向绑定
         this.coder.on('change', (coder) => {
-          this.code = coder.getValue()
+          this.coder = coder.getValue()
 
           if (this.$emit) {
-            this.$emit('input', this.code)
+            this.$emit('input', this.coder)
           }
         })
 
-        this.code.on('renderLine', (code) => {
-          debugger
+        this.coder.on('renderLine', (coder, line, element) => {
+          var line_num = line.lineNo()
+          if (this.uncover_lines.includes(line_num + 1)) {
+            element.style.backgroundColor = "red"
+          }
+          // debugger
         })
 
         // 尝试从父容器获取语法类型
@@ -242,6 +258,7 @@
         this.fetchData()
         this.$nextTick(function () {
           this._initialize()
+          this.setUnCoverStyle()
         })
       },
 
@@ -326,23 +343,17 @@
         var xml_data = this._readTestFile(filename);
         var jsonObj = x2js.xml2js(xml_data);
         var JSONPath = require('JSONPath')
-        var lines = JSONPath.eval(jsonObj, '$..class[?(@._filename=="'+ filepath +'")]..line[?(@._hits=="0")]')
-        return lines
+        var lines = JSONPath.eval(jsonObj, '$..class[?(@._filename=="'+ filepath +'")]..line[?(@._hits=="0")]._number')
+        var line_nums = lines.map(i=>Number(i))
+        // debugger
+        return line_nums
       },
 
       setUnCoverStyle() {
-        var codemirror_lines = document.getElementsByClassName("CodeMirror-line")
         for(var i=0; i<this.uncover_lines.length; i++){
-          var number = this.uncover_lines[i]._number
-          console.log(number)
-          // codemirror_lines[number+1].setAttribute("")
-          // var element = this.$refs.textarea
-          // if (i == 0) {
-          //   debugger
-          // }
-          if (codemirror_lines[parseInt(number)+1]) {
-            codemirror_lines[parseInt(number)+1].setAttribute("class", "CodeMirror-line-red")
-          }
+          var number = this.uncover_lines[i]
+            // console.log(number)
+          this.coder.addLineClass(number-1, "background", "CodeMirror-line-red")
         }
       },
     },
